@@ -20,11 +20,6 @@ vector<string> Indexer::Tokenize(string &str) {
     }
     return tokens;
 }
-string Indexer::sql_q(string table_name ,string file_name ,string path,int score)
-{
-    return "INSERT INTO " + table_name + " VALUES('" + file_name +"','" + path + "'," + to_string(score) + ");" ;
-    
-}
 
 int Indexer::callback(
         void*data, 
@@ -41,7 +36,7 @@ int Indexer::callback(
                 <<endl;
         } 
         
-        cout << "----------------\n";
+        ///cout << "----------------\n";
         return 0;
     }
 
@@ -76,22 +71,78 @@ void Indexer::ScanFiles(fs::path Path){
     }
 
 }
-void Indexer::save_index(string file_path ){
-    cout <<"Testing Sqlite...."<<endl;
+void Indexer::save_index(){
+    //cout <<"Testing Sqlite...."<<endl;
+
     sqlite3* db;
 
     int result =
-        sqlite3_open("indexing.db",&db);
+        sqlite3_open("D:\\Downloads\\MINI_SEARCH_ENGINE-main\\MINI_SEARCH_ENGINE-main\\src\\data\\index.db",&db);
+
+    if(result != SQLITE_OK)
+    {
+        cout << "Database open failed\n";
+        return;
+    }
+
+    char * errMsg = nullptr;
+    
     const char * create_table =
         "CREATE TABLE IF NOT EXISTS file_index("
         "token TEXT,"
-        "file_paths TEXT,"
-        "score INTEGER"
+        "file_paths TEXT"
         ");";
     const char *view_table=
         "SELECT * FROM file_index;";
+    result=sqlite3_exec(
+        db,
+        create_table,
+        nullptr,
+        nullptr,
+        &errMsg
+    );
+    if(result != SQLITE_OK){
+        cout << "[CREATE ERROR]" <<errMsg  <<endl;
+    }
 
-    string add_table =add_value("file_index","Dev","Path",50);
 
+    sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
+    const char* insert_sql = "INSERT INTO file_index(token, file_paths) VALUES(?, ?);"; //Setting insert command with ' ? ' place Holder
+    sqlite3_stmt* stmt; 
+
+    sqlite3_prepare_v2(db, insert_sql, -1, &stmt, nullptr); //Prepare insert query 
+
+    for (const auto& entry : files) {
+        for (const auto& path : entry.second) {
+            sqlite3_bind_text(stmt, 1, entry.first.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, path.c_str(),        -1, SQLITE_STATIC);
+            sqlite3_step(stmt);
+            sqlite3_reset(stmt);
+        }
+    }
+
+    sqlite3_finalize(stmt);
+
+    // for (const auto &entry : files){
+    //     for(const auto &path : entry.second){
+    //         string add_table =sql_q("file_index",entry.first,path);
+    //         result=sqlite3_exec(
+    //             db,
+                
+    //             add_table.c_str(),
+    //             nullptr,
+    //             nullptr,
+    //             &errMsg
+    //             );
+    //         if(result != SQLITE_OK){
+    //             cout << "[ADD ERROR]" <<errMsg  <<endl;
+    //             }
+
+            
+    //     }
+
+    // }
+    sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
+    sqlite3_close(db);
 
 }
