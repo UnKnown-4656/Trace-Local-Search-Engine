@@ -2,6 +2,12 @@
 #include "sqlite3.h"
 
 using namespace std;
+
+string add_value(string table_name ,string file_name ,string path,int score)
+{
+    return "INSERT INTO " + table_name + " VALUES('" + file_name +"','" + path + "'," + to_string(score) + ");" ;
+    
+}
 int callback(
         void*data, 
         int ColumnCount, // means how many column 
@@ -21,6 +27,7 @@ int callback(
         return 0;
     }
 
+
 int main()
 {
     sqlite3* db;
@@ -38,9 +45,8 @@ int main()
     
     const char * view_table=
         "SELECT * FROM file_index;";
-    const char * add_table =
-        "INSERT INTO index "
-        "VALUES('test.txt','D//:downloads/test.txt', 2);";
+    //const char * 
+    string add_table =add_value("file_index","Dev","Path",50);
 
     char * errMsg = nullptr;
 
@@ -56,6 +62,19 @@ int main()
     }
     else{
         cout << "[CREATE ERROR]" <<errMsg  <<endl;
+    }
+    result=sqlite3_exec(
+        db,
+        add_table.c_str(),
+        nullptr,
+        nullptr,
+        &errMsg
+    );
+    if(result == SQLITE_OK){
+        cout << " \n";
+    }
+    else{
+        cout << "[ADD ERROR]" <<errMsg  <<endl;
     }
 
     result=sqlite3_exec(
