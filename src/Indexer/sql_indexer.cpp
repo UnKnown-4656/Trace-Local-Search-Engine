@@ -1,5 +1,4 @@
-#include "Indexer.h"
-
+#include "sql_indexer.h"
 
 vector<string> Indexer::Tokenize(string &str) {
     vector<string> tokens;
@@ -21,6 +20,31 @@ vector<string> Indexer::Tokenize(string &str) {
     }
     return tokens;
 }
+string Indexer::sql_q(string table_name ,string file_name ,string path,int score)
+{
+    return "INSERT INTO " + table_name + " VALUES('" + file_name +"','" + path + "'," + to_string(score) + ");" ;
+    
+}
+
+int Indexer::callback(
+        void*data, 
+        int ColumnCount, // means how many column 
+        char** RowsValues, //row data ** because multiple strings can be stored 
+        char** columnNames // colunmNames  ** because multiple string can be stored 
+)
+    {
+        for(int i =0; i <ColumnCount;i++) //printing data
+        {
+            cout <<columnNames[i]
+                <<" : "
+                <<RowsValues[i]
+                <<endl;
+        } 
+        
+        cout << "----------------\n";
+        return 0;
+    }
+
 void Indexer::ScanFiles(fs::path Path){
 
         try
@@ -52,52 +76,22 @@ void Indexer::ScanFiles(fs::path Path){
     }
 
 }
-void Indexer::SaveIndex(string filename){
-    ofstream Index(filename);
-    if (!Index.is_open())
-    {
-        cout << "Error : Could not open file" << endl;
-        return;
-    }
-    else{
-        for (const auto &entry : files)
-        {
-            //Index << entry.first << "|" << entry.second << endl;
-            for(const auto &path : entry.second){
-                Index << entry.first << "|" << path << endl;
-            }
-        }
-        cout << "Index Saved Successfully" << endl;
-    }
-}
-void Indexer::LoadIndex(string filename){
-    ifstream Index(filename);
+void Indexer::save_index(string file_path ){
+    cout <<"Testing Sqlite...."<<endl;
+    sqlite3* db;
 
-    if (!Index.is_open())
-    {
-        cout << "Error : Could not open file" << endl;
-        return;
-    }
-    else
-    {
-        string line;
-        while (getline(Index, line))
-        {
-            size_t delimiter = line.find("|");
-            if (delimiter != string::npos)
-            {
-                string key = line.substr(0, delimiter);
-                //vector<string> tokenized_key = Tokenize(key);
-                string value = line.substr(delimiter + 1);
-                //for(const auto &token : tokenized_key){
-                files[key].insert(value);
-                //}
-                //files.insert({key, value});
-            }
-        }
-        cout << "Index Loaded Successfully" << endl;
-    }
-}
-const unordered_map<string, unordered_set<string>>& Indexer::getFiles() const {
-    return files;
+    int result =
+        sqlite3_open("indexing.db",&db);
+    const char * create_table =
+        "CREATE TABLE IF NOT EXISTS file_index("
+        "token TEXT,"
+        "file_paths TEXT,"
+        "score INTEGER"
+        ");";
+    const char *view_table=
+        "SELECT * FROM file_index;";
+
+    string add_table =add_value("file_index","Dev","Path",50);
+
+
 }
