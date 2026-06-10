@@ -92,8 +92,7 @@ void Indexer::save_index(){
         "token TEXT,"
         "file_paths TEXT"
         ");";
-    const char *view_table=
-        "SELECT * FROM file_index;";
+
     result=sqlite3_exec(
         db,
         create_table,
@@ -114,14 +113,14 @@ void Indexer::save_index(){
 
     for (const auto& entry : files) {
         for (const auto& path : entry.second) {
-            sqlite3_bind_text(stmt, 1, entry.first.c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 2, path.c_str(),        -1, SQLITE_STATIC);
-            sqlite3_step(stmt);
-            sqlite3_reset(stmt);
+            sqlite3_bind_text(stmt, 1, entry.first.c_str(), -1, SQLITE_STATIC); // Binding text to place holder ,converting c++ string to c char * using .c_str
+            sqlite3_bind_text(stmt, 2, path.c_str(),        -1, SQLITE_STATIC); //same
+            sqlite3_step(stmt);// Add
+            sqlite3_reset(stmt); // Reset
         }
     }
 
-    sqlite3_finalize(stmt);
+    sqlite3_finalize(stmt); // Finalize
 
     // for (const auto &entry : files){
     //     for(const auto &path : entry.second){
@@ -142,7 +141,7 @@ void Indexer::save_index(){
     //     }
 
     // }
-    sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
+    sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr); 
     sqlite3_close(db);
 
 }
