@@ -1,4 +1,4 @@
-#include "Indexer/Indexer.h"
+#include "Indexer/sql_indexer.h"
 #include "SearchEngine/SearchEngine.h"
 #include "Utils/utils.h"
 
@@ -6,11 +6,11 @@ int main() {
     fs::path MyPath = "D:\\Downloads";
     
     Indexer indexer;
-    if (fs::exists("data/index.txt")) {
-        indexer.LoadIndex("data/index.txt");
+    if (fs::exists("index.db")) {
+        indexer.load_index("index.db");
     } else {
         indexer.ScanFiles(MyPath);
-        indexer.SaveIndex("data/index.txt");
+        indexer.save_index("index.db");
     }
 
     SearchEngine engine(indexer.getFiles());
@@ -35,7 +35,7 @@ int main() {
         }
         else if (user_choice == 2) {
             indexer.ScanFiles(MyPath);
-            indexer.SaveIndex("data/index.txt");
+            indexer.save_index("index.db");
             cout << "Files Rescanned Successfully" << endl;
         }
         else if (user_choice == 3) {

@@ -6,7 +6,7 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
-
+#include <set>
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -14,16 +14,20 @@ namespace fs = std::filesystem;
 class Indexer
 {
     private:
+        //unordered_map<string ,string>data;
         unordered_map<string ,unordered_set<string>>files;
-        vector<string> Tokenize(string &str);
+        vector<string> Tokenize(const string &str);
     public: 
-        int callback(
+        static int callback(
             void*data, 
             int ColumnCount, // means how many column 
             char** RowsValues, //row data ** because multiple strings can be stored 
             char** columnNames // colunmNames  ** because multiple string can be stored 
         );
         void ScanFiles(fs::path Path);
-        void save_index();
+        void save_index(string fileName);
+        void load_index(string fileName);
+        const unordered_map<string, unordered_set<string>>& getFiles() const;
+
     
 };

@@ -1,10 +1,10 @@
 #include "sql_indexer.h"
 
-vector<string> Indexer::Tokenize(string &str) {
+vector<string> Indexer::Tokenize(const string &str) {
     vector<string> tokens;
     string current;
     for (char c :str){
-        c=tolower(c);
+        c = static_cast<char>(tolower(static_cast<unsigned char>(c)));;
         if(c=='_' || c=='.' || c=='-' || c==' ' || c=='(' || c==')' || c== '[' || c==']'){
             if(!current.empty()){  //Not Empty
                 tokens.push_back(current); //push current  
@@ -22,19 +22,25 @@ vector<string> Indexer::Tokenize(string &str) {
 }
 
 int Indexer::callback(
+        //unordered_map <string,string> data
         void*data, 
         int ColumnCount, // means how many column 
         char** RowsValues, //row data ** because multiple strings can be stored 
         char** columnNames // colunmNames  ** because multiple string can be stored 
-)
+    )
     {
-        for(int i =0; i <ColumnCount;i++) //printing data
-        {
-            cout <<columnNames[i]
-                <<" : "
-                <<RowsValues[i]
-                <<endl;
-        } 
+        
+            //cout <<columnNames[i]
+                //<<" : "
+                //<<RowsValues[i]
+                //<<endl;
+        auto* files =
+            static_cast<unordered_map<string,unordered_set<string>>*>(data);
+        if(RowsValues[0] && RowsValues[1]){
+            string token =RowsValues[0];
+            string path  =RowsValues[1];
+            (*files)[token].insert(path);
+        }
         
         ///cout << "----------------\n";
         return 0;
@@ -71,13 +77,13 @@ void Indexer::ScanFiles(fs::path Path){
     }
 
 }
-void Indexer::save_index(){
+void Indexer::save_index(string fileName){
     //cout <<"Testing Sqlite...."<<endl;
 
     sqlite3* db;
 
     int result =
-        sqlite3_open("D:\\Downloads\\MINI_SEARCH_ENGINE-main\\MINI_SEARCH_ENGINE-main\\src\\data\\index.db",&db);
+        sqlite3_open(fileName.c_str(),&db);
 
     if(result != SQLITE_OK)
     {
@@ -90,7 +96,8 @@ void Indexer::save_index(){
     const char * create_table =
         "CREATE TABLE IF NOT EXISTS file_index("
         "token TEXT,"
-        "file_paths TEXT"
+        "file_paths TEXT ,"
+        "UNIQUE(token,file_paths)"
         ");";
 
     result=sqlite3_exec(
@@ -106,17 +113,31 @@ void Indexer::save_index(){
 
 
     sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
-    const char* insert_sql = "INSERT INTO file_index(token, file_paths) VALUES(?, ?);"; //Setting insert command with ' ? ' place Holder
+    const char* insert_sql = "INSERT OR IGNORE INTO file_index(token, file_paths) VALUES(?, ?);"; //Setting insert command with ' ? ' place Holder
     sqlite3_stmt* stmt; 
 
-    sqlite3_prepare_v2(db, insert_sql, -1, &stmt, nullptr); //Prepare insert query 
+    ///sqlite3_prepare_v2(db, insert_sql, -1, &stmt, nullptr); //Prepare insert query 
+    if(sqlite3_prepare_v2(db, insert_sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        cout << sqlite3_errmsg(db) << endl;
+        sqlite3_close(db);
+        return;
+    }
 
     for (const auto& entry : files) {
         for (const auto& path : entry.second) {
             sqlite3_bind_text(stmt, 1, entry.first.c_str(), -1, SQLITE_STATIC); // Binding text to place holder ,converting c++ string to c char * using .c_str
             sqlite3_bind_text(stmt, 2, path.c_str(),        -1, SQLITE_STATIC); //same
-            sqlite3_step(stmt);// Add
+            //sqlite3_step(stmt);// Add
+            int rc = sqlite3_step(stmt);
+
+            if(rc != SQLITE_DONE)
+            {
+                cout << sqlite3_errmsg(db) << endl;
+            }
+
             sqlite3_reset(stmt); // Reset
+            sqlite3_clear_bindings(stmt); //Clear bindings
         }
     }
 
@@ -144,4 +165,41 @@ void Indexer::save_index(){
     sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr); 
     sqlite3_close(db);
 
+}
+
+
+void Indexer::load_index(string fileName){
+    files.clear();
+    sqlite3* db;
+    int result =
+    sqlite3_open(fileName.c_str(),&db);
+
+    if(result != SQLITE_OK)
+    {
+        cout << "Database open failed\n";
+        return;
+    }
+    char *errMsg =nullptr;
+    const char * view_index =
+        "SELECT * FROM file_index";
+
+    result=sqlite3_exec(
+        db,
+        view_index,
+        callback,
+        &files,
+        &errMsg
+    );
+    if(result != SQLITE_OK)
+    {
+        cout << "[LOAD ERROR] "
+            << errMsg
+            << endl;
+    }
+
+    sqlite3_close(db);
+
+}
+const unordered_map<string, unordered_set<string>>& Indexer::getFiles() const {
+    return files;
 }
