@@ -43,6 +43,7 @@ int main() {
         }
         else {
             cout << "Invalid Choice" << endl;
+            break;
         }
     }
     return 0;
