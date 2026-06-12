@@ -1,5 +1,6 @@
 #include "SearchEngine.h"
 
+using namespace std;
 
 SearchEngine::SearchEngine(const unordered_map<string, unordered_set<string>>& files)
     : files(files)

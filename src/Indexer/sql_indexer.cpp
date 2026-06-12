@@ -1,5 +1,8 @@
 #include "sql_indexer.h"
 
+using namespace std;
+namespace fs = std::filesystem;
+
 vector<string> Indexer::Tokenize(const string &str) {
     vector<string> tokens;
     string current;
@@ -77,7 +80,7 @@ void Indexer::ScanFiles(fs::path Path){
     }
 
 }
-void Indexer::save_index(string fileName){
+void Indexer::save_index(const string fileName){
     //cout <<"Testing Sqlite...."<<endl;
 
     sqlite3* db;

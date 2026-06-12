@@ -2,6 +2,11 @@
 #include "SearchEngine/SearchEngine.h"
 #include "Utils/utils.h"
 
+
+using namespace std;
+namespace fs = std::filesystem;
+
+
 int main() {
     fs::path MyPath = "D:\\Downloads";
     

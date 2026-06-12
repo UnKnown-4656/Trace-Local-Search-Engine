@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include "sql/sqlite3.h"
@@ -7,8 +9,6 @@
 #include <filesystem>
 #include <vector>
 #include <set>
-using namespace std;
-namespace fs = std::filesystem;
 
 
 class Indexer
@@ -25,7 +25,7 @@ class Indexer
             char** columnNames // colunmNames  ** because multiple string can be stored 
         );
         void ScanFiles(fs::path Path);
-        void save_index(string fileName);
+        void save_index(const string fileName);
         void load_index(string fileName);
         const unordered_map<string, unordered_set<string>>& getFiles() const;
 
