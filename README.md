@@ -219,34 +219,50 @@ Being honest about what this project doesn't do:
 
 ---
 
-## Future Roadmap
+## Current Focus
 
-### Short-Term (next few weeks)
+The goal of this project is to learn how search engines work internally while building a practical local file-search tool.
 
-- [ ] Fix the tokenizer inconsistency (unify into a single shared function)
-- [ ] Accept the scan directory as a command-line argument
-- [ ] Add `#pragma once` to all headers
-- [ ] Remove `using namespace std;` from header files
-- [ ] Add a CMakeLists.txt or Makefile
-- [ ] Wire the intersection search to the CLI menu
-- [ ] Clean commented-out code
+Current development focuses on:
 
-### Medium-Term (1–2 months)
+- Improving tokenization quality
+- Improving ranking quality
+- Making the architecture cleaner
+- Building reliable persistence
+- Learning information retrieval concepts
 
-- [ ] Add file extension filtering (e.g., search only `.pdf` files)
-- [ ] Implement incremental re-indexing using file modification timestamps
-- [ ] Prune stale database entries for deleted files
-- [ ] Add result pagination (show 10 at a time)
-- [ ] Improve ranking with TF-IDF (weigh rare tokens higher)
-- [ ] Add basic unit tests
+## Roadmap
 
-### Long-Term (exploring)
+### Short-Term
 
-- [ ] Index file contents (at least plain text files)
-- [ ] Fuzzy matching for typo tolerance
-- [ ] Auto-complete suggestions using a Trie
-- [ ] A simple GUI or web interface
-- [ ] Cross-platform support
+- [ ] Move tokenization into Utils and share it between Indexer and SearchEngine
+- [ ] Add CamelCase tokenization (e.g., `MyReport` → `["my", "report"]`)
+- [ ] Complete `LoadIndex()` workflow
+- [ ] Remove duplicated tokenization logic
+- [ ] Improve ranking beyond simple token counts
+- [ ] Add metadata storage (extension, size, modified date)
+- [ ] Clean project structure and remove dead code
+- [ ] Add README screenshots and architecture diagrams
+
+### Medium-Term
+
+- [ ] Metadata-based filtering
+- [ ] Extension filtering (e.g., search only `.pdf` files)
+- [ ] Incremental re-indexing (only update changed files)
+- [ ] Better ranking experiments
+- [ ] Search benchmarks
+- [ ] Query parser improvements
+- [ ] Trie-based suggestions
+
+### Long-Term Research
+
+These are exploration goals rather than guaranteed features.
+
+- [ ] Full-text indexing
+- [ ] Content extraction from TXT/PDF files
+- [ ] API exposure for external applications
+- [ ] Learning BM25 / TF-IDF ranking
+- [ ] Machine-learning-assisted ranking experiments
 
 ---
 
