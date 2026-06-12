@@ -96,11 +96,13 @@ void Indexer::save_index(const string fileName){
     char * errMsg = nullptr;
     
     const char * create_table =
+        //"DELETE FROM file_index;"
         "CREATE TABLE IF NOT EXISTS file_index("
         "token TEXT,"
         "file_paths TEXT ,"
         "UNIQUE(token,file_paths)"
-        ");";
+        ");"
+        "DELETE FROM file_index;";
 
     result=sqlite3_exec(
         db,
