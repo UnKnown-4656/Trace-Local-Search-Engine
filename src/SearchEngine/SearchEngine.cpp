@@ -6,26 +6,26 @@ SearchEngine::SearchEngine(const unordered_map<string, unordered_set<string>>& f
     : files(files)
 {
 }
-vector<string>SearchEngine::Tokenize(string &str){
-        vector<string> tokens;
-        string current;
-        for (char c :str){
-         c=tolower(c);
-         if(c=='_' || c=='.' || c=='-' || c==' '){
-             if(!current.empty()){
-                tokens.push_back(current);
-                current.clear();
-            }
-        }
-        else{
-            current+=c;
-        }
-        }
-        if(!current.empty()){
-            tokens.push_back(current);
-        }
-        return tokens;
-    }
+// vector<string>SearchEngine::Tokenize(string &str){
+//         vector<string> tokens;
+//         string current;
+//         for (char c :str){
+//          c=tolower(c);
+//          if(c=='_' || c=='.' || c=='-' || c==' '){
+//              if(!current.empty()){
+//                 tokens.push_back(current);
+//                 current.clear();
+//             }
+//         }
+//         else{
+//             current+=c;
+//         }
+//         }
+//         if(!current.empty()){
+//             tokens.push_back(current);
+//         }
+//         return tokens;
+//     }
     
 vector<SearchResult> SearchEngine::search(string Target)
     {
