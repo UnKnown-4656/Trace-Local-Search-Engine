@@ -52,7 +52,7 @@ void Indexer::ScanFiles(fs::path Path){
 
         try
     {
-        for (const auto &entry : fs::directory_iterator(Path))
+        for (const auto &entry : fs::directory_iterator(Path,fs::directory_options::skip_permission_denied))
         {
             if (entry.is_directory())
             {
@@ -75,7 +75,9 @@ void Indexer::ScanFiles(fs::path Path){
     catch (exception &e)
     {
         cout << "Error : " << e.what() << endl;
-        return;
+
+        //continue;
+    
     }
 
 }
