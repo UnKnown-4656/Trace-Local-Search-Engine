@@ -1,16 +1,16 @@
 # Mini Search Engine
 
-A local file-search tool built in C++17 that indexes filenames on your computer and lets you search for them using keywords.
+A local file-search tool built in C++17 that indexes filenames on your computer recursively and allows you to search for them using keywords with instant query results.
 
 ---
 
 ## Overview
 
-This project is a command-line file-search utility. It scans a folder on your hard drive, breaks every filename into keywords (tokens), and stores those keywords in an index. When you search for something, it looks up your keywords in the index and shows you matching files, sorted by how many of your keywords each file matched.
+This project is a command-line file-search utility. It scans a configured folder on your hard drive, breaks every filename into keywords (tokens), and persists those keywords in a local SQLite database index. When you search for a file, it looks up your query keywords in the database and shows you matching files, sorted by relevance based on how many keywords each file matched.
 
 I built this as a learning project to understand how search engines work at a fundamental level — specifically **inverted indexes**, **tokenization**, and **relevance ranking**. It started as a single-file procedural program and was gradually refactored into a modular, object-oriented design with SQLite-based persistence.
 
-The project is in an early/prototype stage. The core pipeline works — you can scan a directory, save the index, reload it, and search — but there are known limitations and several features I'd like to add in the future.
+The project is in an early/prototype stage. The core pipeline is fully functional — you can scan a directory, save the index, reload it, and search — but there are known limitations and several features planned for the future.
 
 ---
 
@@ -18,27 +18,27 @@ The project is in an early/prototype stage. The core pipeline works — you can 
 
 ### Implemented
 
-- ✅ Recursive directory scanning using C++17 `std::filesystem`
-- ✅ Filename tokenization (splits on `_`, `.`, `-`, spaces, parentheses, brackets)
-- ✅ Case-insensitive search (all tokens lowercased at index time)
-- ✅ Inverted index stored in memory (`unordered_map<string, unordered_set<string>>`)
-- ✅ SQLite persistence — index saved to disk so you don't re-scan every time
-- ✅ Transactional database writes (batch inserts wrapped in `BEGIN`/`COMMIT`)
-- ✅ Keyword search with basic ranking (files matching more keywords score higher)
-- ✅ Set-intersection search (find files matching *all* keywords, not just any)
-- ✅ On-demand re-scanning from the CLI menu
-- ✅ Basic error handling for filesystem permission errors
+- ✅ **Recursive Directory Scanning**: Traverses directory structures recursively using C++17 `std::filesystem`.
+- ✅ **Unified Tokenization**: Splits filenames and search queries on common delimiters (`_`, `.`, `-`, spaces, parentheses, brackets) to handle diverse naming conventions.
+- ✅ **Case-Insensitive Search**: Lowercases all tokens at both index and search time for robust matching.
+- ✅ **In-Memory Cache**: Populates an inverted index in memory (`unordered_map<string, unordered_set<string>>`) from SQLite on start for sub-millisecond query lookups.
+- ✅ **SQLite Persistence**: Saves the index database (`index.db`) locally so you don't need to re-scan every time you start the tool.
+- ✅ **High-Performance Transactions**: Uses transactional database writes (`BEGIN`/`COMMIT`) and prepared statements to batch index saves, achieving over a 100x speedup compared to individual row inserts.
+- ✅ **Relevance Ranking**: Matches queries using a union-based (OR) logic and ranks results based on token frequency (files matching more keywords rank higher).
+- ✅ **Intersection Search**: Includes a set-intersection algorithm (`searchwithintersection`) to find files matching *all* keywords (implemented and ready, currently not exposed in the main CLI menu).
+- ✅ **CLI menu**: Offers an interactive, console-driven menu with options to search, rescan, or exit.
+- ✅ **Graceful Error Handling**: Wraps filesystem walks in try-catch blocks to skip permission-denied system directories without crashing.
 
-### Not Yet Implemented
+### Not Yet Implemented / Planned
 
 - 🚧 Searching inside file contents (only filenames are indexed)
 - 🚧 Fuzzy/approximate matching (typos won't find results)
-- 🚧 Configurable scan directory (currently hardcoded)
+- 🚧 Configurable scan directory from the command line (currently hardcoded to `D:\Downloads` in `main.cpp`)
 - 🚧 File metadata search (size, date, extension filters)
-- 🚧 Build system (no CMake or Makefile yet)
-- 🚧 Automated tests
-- 🚧 Incremental re-indexing (full re-scan every time)
-- 🚧 Cleaning up stale entries for deleted files
+- 🚧 Modern build system (no CMakeLists.txt or Makefile yet)
+- 🚧 Automated unit tests
+- 🚧 Incremental re-indexing (currently re-scans the full directory)
+- 🚧 Automatic pruning of stale/deleted files from the database
 
 ---
 
@@ -46,33 +46,44 @@ The project is in an early/prototype stage. The core pipeline works — you can 
 
 The project has four main parts:
 
-### Indexer (`src/Indexer/`)
+```mermaid
+graph TD
+    A["User (CLI)"] -->|"1. Choice: Search / Rescan / Exit"| B["main.cpp — CLI Loop"]
+    B -->|"2a. ScanFiles(path)"| C["Indexer Module"]
+    B -->|"2b. search(query)"| D["SearchEngine Module"]
+    C -->|"3. recursive_directory_iterator"| E["Filesystem (std::filesystem)"]
+    C -->|"4. save_index / load_index"| F["SQLite Database (index.db)"]
+    D -->|"5. Reads inverted index"| G["In-Memory Index (unordered_map)"]
+    C -->|"6. Builds inverted index"| G
+    D -->|"7. Ranked results"| A
+    B -->|"Utility calls"| H["Utils Module"]
+```
 
-This is responsible for:
-- Walking through folders recursively and finding all files
-- Breaking each filename into tokens (e.g., `"my_report.pdf"` → `["my", "report", "pdf"]`)
-- Building an inverted index — a map where each keyword points to a set of file paths that contain it
-- Saving that index to an SQLite database, and loading it back later
+### Indexer ([src/Indexer/](file:///d:/Downloads/MINI_SEARCH_ENGINE-main/MINI_SEARCH_ENGINE-main/src/Indexer/))
 
-### SearchEngine (`src/SearchEngine/`)
+Responsible for:
+- Walking through folders recursively and finding all files.
+- Building the in-memory inverted index mapping each keyword to a set of matching file paths.
+- Serializing that index to `index.db` using SQLite prepared statements and transactions.
+- Deserializing the database back into memory upon application startup.
 
-This handles the actual searching:
-- Takes the user's query and tokenizes it the same way filenames were tokenized
-- Looks up each query token in the inverted index
-- Counts how many query tokens matched each file path (this becomes the "score")
-- Sorts results by score so the most relevant files appear first
+### SearchEngine ([src/SearchEngine/](file:///d:/Downloads/MINI_SEARCH_ENGINE-main/MINI_SEARCH_ENGINE-main/src/SearchEngine/))
 
-There's also an intersection-based search method that only returns files matching *every* keyword, but it's not currently exposed in the menu.
+Handles search queries and scoring:
+- Receives the inverted index from `Indexer` via dependency injection (a `const` reference is passed to the constructor to avoid copying).
+- Tokenizes search queries using the unified tokenizer.
+- Scores matching files based on the count of matching tokens and sorts them so the most relevant files appear first.
+- Offers a set-intersection method for exact AND matches.
 
-### Utils (`src/Utils/`)
+### Utils ([src/Utils/](file:///d:/Downloads/MINI_SEARCH_ENGINE-main/MINI_SEARCH_ENGINE-main/src/Utils/))
 
-Small helper functions shared across the project:
-- `ToLower()` — converts a string to lowercase (currently unused since tokenizers handle this inline)
-- `input()` — prompts the user and reads a full line of input (supports spaces)
+Shared helper functionality:
+- `Tokenize()` — A unified string tokenizer that splits on delimiters (`_`, `.`, `-`, spaces, `(`, `)`, `[`, `]`) and converts all letters to lowercase. This resolves previous issues where the indexer and search engine used mismatched tokenization rules.
+- `input()` — Prompts the user and safely reads a line of input (supporting space characters).
 
-### SQLite (`src/Indexer/sql/`)
+### SQLite ([src/Indexer/sql/](file:///d:/Downloads/MINI_SEARCH_ENGINE-main/MINI_SEARCH_ENGINE-main/src/Indexer/sql/))
 
-The project vendors the SQLite amalgamation (the entire SQLite library as a single `.c` file). This is compiled and linked directly into the binary — no external database server needed.
+Vendors the SQLite amalgamation (the entire database engine as a single `.c` and `.h` file pair). This is compiled and linked directly into the binary — eliminating the need for an external database server or external DLLs.
 
 The database schema is simple:
 ```sql
@@ -82,8 +93,6 @@ CREATE TABLE file_index (
     UNIQUE(token, file_paths)
 );
 ```
-
-Each row maps one token to one file path. The `UNIQUE` constraint prevents duplicate entries on re-index.
 
 ---
 
@@ -123,146 +132,123 @@ Each row maps one token to one file path. The `UNIQUE` constraint prevents dupli
 ```
 MINI_SEARCH_ENGINE/
 │
-├── src/                          # Main source code
+├── src/                          # ★ Active Source Code
 │   ├── main.cpp                  # Entry point and CLI menu loop
-│   ├── Indexer/
+│   ├── Indexer/                  # Indexer module
 │   │   ├── sql_indexer.h         # Indexer class declaration
 │   │   ├── sql_indexer.cpp       # Indexer implementation
-│   │   ├── sql/                  # Vendored SQLite3 library
-│   │   │   ├── sqlite3.h
-│   │   │   ├── sqlite3.c
-│   │   │   └── sqlite3.o         # Pre-compiled SQLite object
-│   │   └── old/                  # Previous version (flat-file persistence)
+│   │   ├── sql/                  # Vendored SQLite3 C library
+│   │   │   ├── sqlite3.h         # SQLite header
+│   │   │   ├── sqlite3.c         # SQLite source amalgamation
+│   │   │   ├── sqlite3ext.h      # SQLite extension API
+│   │   │   ├── sqlite3.o         # Pre-compiled SQLite object file
+│   │   │   └── shell.c           # SQLite command-line tool source
+│   │   └── old/                  # Legacy Indexer version (archived)
 │   │       ├── Indexer.h
 │   │       └── Indexer.cpp
-│   ├── SearchEngine/
-│   │   ├── SearchEngine.h        # SearchEngine class + SearchResult struct
-│   │   └── SearchEngine.cpp      # Search and ranking logic
-│   └── Utils/
-│       ├── utils.h
-│       └── utils.cpp
+│   ├── SearchEngine/             # SearchEngine module
+│   │   ├── SearchEngine.h        # SearchEngine class & SearchResult struct
+│   │   └── SearchEngine.cpp      # Query processing & ranking logic
+│   └── Utils/                    # Shared utilities
+│       ├── utils.h               # Tokenize & input declarations
+│       └── utils.cpp             # Tokenize & input implementations
 │
-├── experiments/                  # Standalone algorithm experiments
-│   ├── trie.cpp                  # Trie data structure prototype
+├── experiments/                  # ★ Standalone Algorithm Experiments
+│   ├── header.h                  # Legacy prototypes header
+│   ├── functions.cpp             # Early indexer experiments
 │   ├── intersection.cpp          # Set-intersection algorithm test
-│   ├── neural.cpp                # Linear regression experiment (unrelated)
-│   ├── tokenization_testing.cpp  # Tokenizer test
-│   └── sqllite.cpp/              # Early SQLite integration tests
+│   ├── trie.cpp                  # Trie data structure prototype
+│   ├── neural.cpp                # Scratchpad for basic neural net experiments
+│   ├── syntax_test.cpp           # C++ STL syntax learning scripts
+│   ├── tokenization_testing.cpp  # Tokenizer testing logic
+│   └── sqllite.cpp/              # SQLite integration tests
+│       ├── main.cpp
+│       ├── test.cpp
+│       ├── indexing.db
+│       └── test.db
 │
-├── old/                          # Archived: original monolithic version
+├── old/                          # ★ Archived: original monolithic C++ prototype
 │   ├── header.h
 │   └── functions.cpp
 │
-└── .gitignore
+├── .gitignore                    # Git ignore configuration
+├── compile_command.txt           # Sample compile command document
+├── fact.py                       # Combinatorics scratch notes (gitignored)
+├── index.db                      # Generated SQLite database file (gitignored)
+├── project_documentation.md      # Detailed developer documentation
+└── README.md                     # Project overview and guide (this file)
 ```
-
-### Notes on `old/` and `experiments/`
-
-These folders are not part of the working application. `old/` contains the original single-file version before I refactored into separate classes. `experiments/` contains standalone programs I wrote while learning specific algorithms and APIs. I kept them in the repo to document my learning process, but they don't compile with or link into the main binary.
 
 ---
 
 ## Technical Challenges Solved
 
-### Tokenization
+### Tokenization Mismatch
 
-Filenames don't follow a single naming convention. `project_report.pdf`, `Project-Report.pdf`, and `project report.pdf` should all be searchable by "project" and "report". The tokenizer handles this by splitting on multiple delimiters and lowercasing everything. Getting the delimiter set right (and keeping it consistent between indexing and searching) was an iterative process — I initially missed parentheses and brackets.
+Filenames don't follow a single naming convention. `project_report.pdf`, `Project-Report.pdf`, and `project(report).pdf` should all be searchable by "project" and "report". 
 
-### Ranking
+Initially, the indexer and search engine used separate, slightly different tokenization methods. The indexer split on 8 delimiters, whereas the search engine split on only 4. This resulted in an inconsistency where file paths containing `()` or `[]` were indexed under token segments that the search engine could not match. This challenge was resolved by refactoring the tokenization logic into a single shared utility `Tokenize()` under `src/Utils/utils.cpp`, ensuring consistent token extraction across both modules.
 
-Simply returning all files that match *any* keyword produces too many results. I implemented a scoring system where each file's score equals the number of query tokens it matched. This means a file matching 3 out of 3 keywords appears above a file matching only 1. It's a simple approach — not TF-IDF or BM25 — but it noticeably improves result quality for multi-keyword queries.
+### Relevance Ranking
+
+Simply returning all files that match *any* keyword produces too many results for common queries. I implemented a scoring system where each file's score equals the number of query tokens it matched. This ensures that a file matching 3 out of 3 query keywords appears above a file matching only 1. While simple (not yet utilizing TF-IDF or BM25), it significantly improves output quality.
 
 ### Persistence with SQLite
 
-My first version saved the index as a pipe-delimited text file (`token|path`). It worked, but was slow for large indexes and had no protection against corruption. Switching to SQLite with prepared statements and transactions was a significant improvement. Wrapping all inserts in a single transaction (`BEGIN`/`COMMIT`) made saving dramatically faster because SQLite doesn't need to sync to disk after every individual insert.
+The first iteration saved the index to a pipe-delimited text file. It was slow for large directory structures and vulnerable to corruption. Switching to SQLite using prepared statements and transactions was a massive improvement. Wrapping batch index updates in a single transaction (`BEGIN` / `COMMIT`) avoids disk sync overhead on every insert, making index saves virtually instant.
 
 ### Recursive File Traversal
 
-Using `std::filesystem::directory_iterator` with recursion was straightforward, but handling permission-denied errors was important. Some system directories throw exceptions when accessed. Wrapping the traversal in try-catch blocks ensures the scanner skips inaccessible folders instead of crashing.
+Using `std::filesystem::directory_iterator` with recursion is straightforward, but system/hidden directories often trigger permission-denied errors. Handling these gracefully via try-catch blocks and `fs::directory_options::skip_permission_denied` keeps the scanner running smoothly without crashing the app.
 
 ---
 
-## What I Learned
+## Technical Learnings
 
-Writing this project taught me several things I wouldn't have learned from textbooks alone:
-
-- **Inverted indexes** — I now understand why they're the core data structure behind search. Mapping keywords to documents (instead of scanning every document for keywords) makes lookup essentially instant.
-
-- **Hash maps in practice** — Using `unordered_map` and `unordered_set` gave me hands-on experience with hash-based containers, their trade-offs versus ordered containers, and how to choose the right one for a use case.
-
-- **SQLite C API** — Working with `sqlite3_prepare_v2`, parameter binding, `sqlite3_step`, and callbacks taught me how real database APIs work at a low level. The difference between individual inserts and transactional batches was eye-opening (100x+ performance difference).
-
-- **Refactoring** — The project started as one big file with free functions. Extracting classes (`Indexer`, `SearchEngine`), separating headers from implementations, and using dependency injection (passing the index by const reference instead of making SearchEngine access the database) made the code much easier to reason about.
-
-- **C++17 features** — `std::filesystem` for directory traversal, range-based for loops, structured bindings, and `auto` type deduction. These modern features made the code significantly cleaner compared to the C-style filesystem APIs I would have needed otherwise.
-
-- **Trade-offs** — I explored several approaches (Trie, multimap, intersection-only search) in the experiments folder before settling on the current design. Each had pros and cons, and going through that process helped me understand that engineering is about choosing the right trade-off, not finding a perfect solution.
+- **Inverted Indexes**: Gained a deep understanding of why maps of terms-to-documents are the backbone of search, making lookups extremely fast compared to linear scans.
+- **Hash Maps in Practice**: Practical experience with `std::unordered_map` and `std::unordered_set` hash collisions, lookups, and memory footprint tradeoffs.
+- **SQLite C API**: Worked directly with `sqlite3_prepare_v2`, prepared statement parameter binding, transactions, and state resets.
+- **Refactoring & Clean Code**: Refactoring the codebase from a monolithic procedural block to clean classes utilizing dependency injection and shared utility folders.
+- **Modern C++**: Heavy utilization of C++17 `std::filesystem`, structured bindings, range-based loops, and move semantics.
 
 ---
 
 ## Current Limitations
 
-Being honest about what this project doesn't do:
-
 | Limitation | Detail |
-|-----------|--------|
+| :--- | :--- |
 | **Filename-only search** | Only filenames are indexed. File contents are never read or searched. |
-| **Hardcoded scan path** | The directory to scan is hardcoded to `D:\Downloads` in `main.cpp`. Changing it requires editing code and recompiling. |
-| **No fuzzy matching** | Typos in queries won't match. Searching "reprot" won't find "report". |
-| **No incremental updates** | Re-scanning rebuilds the entire index from scratch. There's no diffing or timestamp checking. |
-| **Stale entries persist** | If a file is deleted, its entry stays in the database until a full re-scan + fresh save. |
-| **Tokenizer inconsistency** | The Indexer splits on 8 delimiters but the SearchEngine splits on only 4. This is a known bug — files with `()` or `[]` in their names may not be findable. |
-| **No build system** | No CMake or Makefile. You need to know the exact compiler command. |
-| **No tests** | No unit or integration test suite. The `experiments/` folder has ad-hoc tests but nothing automated. |
-| **Windows only** | Uses hardcoded Windows paths (`D:\\`). Would need path adjustments for Linux/macOS. |
-| **No result pagination** | All results print at once, which can flood the terminal for broad queries. |
+| **Hardcoded scan path** | The directory to scan is hardcoded to `D:\Downloads` in `main.cpp`. |
+| **No fuzzy matching** | Typos in queries won't match (e.g., searching "reprot" won't match "report"). |
+| **No incremental updates** | Re-scanning rebuilds the entire database index from scratch. |
+| **Stale entries persist** | If a file is deleted from disk, its entry stays in the database until a full re-scan is run. |
+| **No build system** | No Makefile or CMake file is included; compiles via direct g++ shell commands. |
+| **No unit tests** | Lacks automated unit testing frameworks. |
+| **Windows-oriented** | Hardcoded Windows paths (`D:\\`) mean it requires modification to run on Linux/macOS. |
+| **No result pagination** | All results print at once, which can flood the terminal for generic queries. |
 
 ---
-
-## Current Focus
-
-The goal of this project is to learn how search engines work internally while building a practical local file-search tool.
-
-Current development focuses on:
-
-- Improving tokenization quality
-- Improving ranking quality
-- Making the architecture cleaner
-- Building reliable persistence
-- Learning information retrieval concepts
 
 ## Roadmap
 
 ### Short-Term
 
-- [ ] Move tokenization into Utils and share it between Indexer and SearchEngine
-- [ ] Add CamelCase tokenization (e.g., `MyReport` → `["my", "report"]`)
-- [ ] Complete `LoadIndex()` workflow
-- [ ] Remove duplicated tokenization logic
-- [ ] Improve ranking beyond simple token counts
-- [ ] Add metadata storage (extension, size, modified date)
-- [ ] Clean project structure and remove dead code
-- [ ] Add README screenshots and architecture diagrams
+- [x] Move tokenization into Utils and share it between Indexer and SearchEngine.
+- [x] Complete `LoadIndex()` workflow.
+- [x] Remove duplicated tokenization logic.
+- [ ] Add CamelCase tokenization (e.g., `MyReport` → `["my", "report"]`).
+- [ ] Improve ranking beyond simple token counts (implement TF-IDF or BM25).
+- [ ] Add metadata storage (extension, size, modified date).
+- [ ] Clean project structure and remove dead code.
+- [ ] Add README screenshots and architecture diagrams.
 
 ### Medium-Term
 
-- [ ] Metadata-based filtering
-- [ ] Extension filtering (e.g., search only `.pdf` files)
-- [ ] Incremental re-indexing (only update changed files)
-- [ ] Better ranking experiments
-- [ ] Search benchmarks
-- [ ] Query parser improvements
-- [ ] Trie-based suggestions
-
-### Long-Term Research
-
-These are exploration goals rather than guaranteed features.
-
-- [ ] Full-text indexing
-- [ ] Content extraction from TXT/PDF files
-- [ ] API exposure for external applications
-- [ ] Learning BM25 / TF-IDF ranking
-- [ ] Machine-learning-assisted ranking experiments
+- [ ] Metadata-based filtering (by size, date, etc.).
+- [ ] Extension filtering (e.g., search only `.pdf` files).
+- [ ] Incremental re-indexing (only update changed files).
+- [ ] Trie-based search suggestions / auto-complete.
+- [ ] Search benchmarks.
 
 ---
 
@@ -270,34 +256,39 @@ These are exploration goals rather than guaranteed features.
 
 ### Prerequisites
 
-- A C++17 compatible compiler (GCC 8+, MSVC 2017+, or Clang 7+)
-- Windows (currently; see Limitations)
+- A C++17 compatible compiler (e.g., GCC 8+, MSVC 2017+, or Clang 7+)
+- Windows (see path requirements in `main.cpp`)
 
 ### Compile
 
-```bash
-cd src
+1. Open a terminal and navigate to the `src` directory:
+   ```bash
+   cd src
+   ```
 
-# If sqlite3.o doesn't exist, compile it first:
-gcc -c Indexer/sql/sqlite3.c -o Indexer/sql/sqlite3.o
+2. If the SQLite object file `sqlite3.o` does not exist in `Indexer/sql/`, compile it first:
+   ```bash
+   gcc -c Indexer/sql/sqlite3.c -o Indexer/sql/sqlite3.o
+   ```
 
-# Compile the project:
-g++ -std=c++17 -o search.exe main.cpp Indexer/sql_indexer.cpp SearchEngine/SearchEngine.cpp Utils/utils.cpp Indexer/sql/sqlite3.o
-```
+3. Compile and link the project:
+   ```bash
+   g++ -std=c++17 -o search.exe main.cpp Indexer/sql_indexer.cpp SearchEngine/SearchEngine.cpp Utils/utils.cpp Indexer/sql/sqlite3.o
+   ```
 
-### Important
+### Configuration
 
-Before building, open `main.cpp` and change the hardcoded path on line 6 to a directory you want to index:
+Before building, open [src/main.cpp](file:///d:/Downloads/MINI_SEARCH_ENGINE-main/MINI_SEARCH_ENGINE-main/src/main.cpp) and set the path you want to index on line 11:
 
 ```cpp
-fs::path MyPath = "D:\\Downloads";  // ← Change this to your target folder
+fs::path MyPath = "D:\\Downloads";  // ← Change this to your target directory
 ```
 
 ---
 
 ## Usage
 
-```
+```bash
 $ ./search.exe
 
 1. Search for a file
@@ -310,22 +301,8 @@ D:\University\lecture_notes_chapter3.pdf
 D:\University\lecture-notes-final.docx
 ```
 
-- **Option 1** — Enter one or more keywords. Results are sorted by relevance (files matching more keywords appear first).
-- **Option 2** — Re-scans the filesystem and updates the database. Use this after adding or removing files.
-- **Option 3** — Exits the program.
+- **Option 1**: Enter one or more search keywords. Results are displayed sorted by relevance.
+- **Option 2**: Re-scans the target folder and updates the database.
+- **Option 3**: Exits the program.
 
-On first run, scanning may take a few seconds depending on the size of the target directory. On subsequent runs, the saved index loads almost instantly.
-
----
-
-## Tech Stack
-
-| Technology | Why |
-|-----------|-----|
-| C++17 | Modern language features (`std::filesystem`, range-based loops) |
-| SQLite 3 | Lightweight embedded database — no server setup needed |
-| STL containers | `unordered_map` and `unordered_set` for the inverted index |
-
----
-
-*Built as a learning project to explore search engine fundamentals, database integration, and software architecture in C++.*
+On the very first run, scanning might take a moment. On subsequent runs, the SQLite index will load almost instantly.
