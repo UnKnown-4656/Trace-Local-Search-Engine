@@ -1,0 +1,55 @@
+#include <iostream>
+#include <string>
+#include <cctype>
+#include <vector>
+
+
+using namespace std;
+
+
+
+vector <string>camelcase(string &token){
+    string current;
+    vector <string> tokens;
+    for(char c : token){
+        if(isupper(c)){
+            if(!current.empty())
+            {
+                tokens.push_back(current);
+                current.clear();
+
+            }
+        }
+        current+=c;
+    }
+    if(!current.empty()){
+        tokens.push_back(current);
+        current.clear();
+    }
+
+    return tokens;
+}
+
+int main()
+{
+    string target = "CamelCase_with_Normal_Tokenization.pdf";
+    string current;
+    vector <string> tokens ;
+    for(char &c : target){
+        if(c=='_' || c=='.' || c=='-' || c==' ')
+        {
+            if(!current.empty()){
+                tokens.push_back(current);
+                current.clear();
+
+            }
+        }
+        current+=c;
+    }
+    vector<string> results;
+    for(auto token :tokens){
+        camelcase(token);
+    }
+    for(auto token :results)
+
+}
