@@ -38,18 +38,31 @@ int main()
     for(char &c : target){
         if(c=='_' || c=='.' || c=='-' || c==' ')
         {
+            //if(isupper(c)){
             if(!current.empty()){
                 tokens.push_back(current);
                 current.clear();
 
             }
+            //}
         }
+        else{
         current+=c;
+        }
     }
+    
     vector<string> results;
     for(auto token :tokens){
-        camelcase(token);
+        //cout <<token <<endl;
+        vector <string >Results=camelcase(token);
+        for(const string&res :Results){
+            results.push_back(res);
+        }
     }
-    for(auto token :results)
+    for(const auto &res:results){
+        cout <<res<<endl;
+    }
+
+  
 
 }
