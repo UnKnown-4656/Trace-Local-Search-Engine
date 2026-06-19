@@ -47,7 +47,7 @@ int main()
             //}
         }
         else{
-        current+=c;
+         current+=c;
         }
     }
     
