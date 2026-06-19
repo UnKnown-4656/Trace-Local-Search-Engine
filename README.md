@@ -4,6 +4,17 @@ A local file-search tool built in C++17 that indexes filenames on your computer 
 
 ---
 
+
+##TODO for 20/06/2026
+
+1.Add ToLower Function in utils and convert final results of tokenization to lower before returning
+2.Explore More about advanced camelCase tokenixation try to fix token = "NAME" -> n , a, m ,e ->user_search: Token "name" ->name ------> No files found or false
+
+
+
+
+
+-----
 ## Overview
 
 This project is a command-line file-search utility. It scans a configured folder on your hard drive, breaks every filename into keywords (tokens), and persists those keywords in a local SQLite database index. When you search for a file, it looks up your query keywords in the database and shows you matching files, sorted by relevance based on how many keywords each file matched.
