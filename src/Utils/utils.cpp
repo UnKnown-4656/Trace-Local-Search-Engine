@@ -1,11 +1,34 @@
 #include "utils.h"
 
 using namespace std;
+
+vector <string>camelcase(string &token){
+    string current;
+    vector <string> tokens;
+    for(char c : token){
+        if(isupper(c)){
+            if(!current.empty())
+            {
+                tokens.push_back(current);
+                current.clear();
+
+            }
+        }
+        current+=c;
+    }
+    if(!current.empty()){
+        tokens.push_back(current);
+        current.clear();
+    }
+
+    return tokens;
+}
+
 vector<string>Tokenize(const string &str) {
     vector<string> tokens;
     string current;
     for (char c :str){
-        c = static_cast<char>(tolower(static_cast<unsigned char>(c)));;
+        //c = static_cast<char>(tolower(static_cast<unsigned char>(c)));;
         if(c=='_' || c=='.' || c=='-' || c==' ' || c=='(' || c==')' || c== '[' || c==']'){
             if(!current.empty()){  //Not Empty
                 tokens.push_back(current); //push current  
@@ -19,7 +42,21 @@ vector<string>Tokenize(const string &str) {
     if(!current.empty()){
         tokens.push_back(current);
     }
-    return tokens;
+    //return tokens;   
+    vector<string> results;
+    for(auto token :tokens){
+        //cout <<token <<endl;
+        vector <string >Results=camelcase(token);
+        for(const string&res :Results){
+            
+            results.push_back(res);
+        }
+    }
+    //for(const auto &res:results){
+     //   cout <<res<<endl;
+    //}
+    return results;
+
 }
 
 string input(string placeholder)
