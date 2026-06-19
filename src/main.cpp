@@ -41,7 +41,7 @@ int main() {
         }
         else if (user_choice == 2) {
             //indexer.clear();
-            indexer.ScanFiles(MyPath);
+            indexer.RebuildIndex(MyPath);
             indexer.save_index("index.db");
             engine = SearchEngine(&indexer.getFiles());
             cout << "Files Rescanned Successfully" << endl;

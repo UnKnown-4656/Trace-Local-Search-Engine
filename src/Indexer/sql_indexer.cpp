@@ -210,3 +210,8 @@ void Indexer::load_index(string fileName){
 const unordered_map<string, unordered_set<string>>& Indexer::getFiles() const {
     return files;
 }
+void Indexer::RebuildIndex(fs::path path)
+{
+    files.clear();
+    ScanFiles(path);
+}

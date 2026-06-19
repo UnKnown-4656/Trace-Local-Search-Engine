@@ -30,6 +30,6 @@ class Indexer
         void save_index(const std::string fileName);
         void load_index(std::string fileName);
         const std::unordered_map<std::string, std::unordered_set<std::string>>& getFiles() const;
-
+        void RebuildIndex(fs::path path);
     
 };
