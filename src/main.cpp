@@ -14,11 +14,12 @@ int main() {
     if (fs::exists("index.db")) {
         indexer.load_index("index.db");
     } else {
+        //indexer.files.clear();
         indexer.ScanFiles(MyPath);
         indexer.save_index("index.db");
     }
 
-    SearchEngine engine(indexer.getFiles());
+    SearchEngine engine(&indexer.getFiles());
 
     bool running = true;
     while (running) {
@@ -39,9 +40,13 @@ int main() {
             }
         }
         else if (user_choice == 2) {
+            //indexer.clear();
             indexer.ScanFiles(MyPath);
             indexer.save_index("index.db");
+            engine = SearchEngine(&indexer.getFiles());
             cout << "Files Rescanned Successfully" << endl;
+            
+            
         }
         else if (user_choice == 3) {
             running = false;

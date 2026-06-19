@@ -52,7 +52,7 @@ void Indexer::ScanFiles(fs::path Path){
 
         try
     {
-        files.clear();
+       
         for (const auto &entry : fs::directory_iterator(Path,fs::directory_options::skip_permission_denied))
         {
             if (entry.is_directory())
