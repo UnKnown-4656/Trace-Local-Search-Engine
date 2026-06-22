@@ -2,6 +2,9 @@
 
 using namespace std;
 
+
+
+//string ToLower(string target)
 vector <string>camelcase(string &token){
     string current;
     vector <string> tokens;
@@ -48,7 +51,7 @@ vector<string>Tokenize(const string &str) {
         //cout <<token <<endl;
         vector <string >Results=camelcase(token);
         for(const string&res :Results){
-            
+            // Have to LowerCase Before pushing 
             results.push_back(res);
         }
     }

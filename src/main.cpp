@@ -23,12 +23,14 @@ int main() {
 
     bool running = true;
     while (running) {
+        
         int user_choice;
         cout << "1. Search for a file" << endl;
         cout << "2. Rescan files" << endl;
         cout << "3. Exit" << endl;
         cout << "Enter your choice: ";
         cin >> user_choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         if (user_choice == 1) {
             string Target = input("Enter Target File Name :");
