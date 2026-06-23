@@ -59,8 +59,9 @@ vector<string>Tokenize(const string &str) {
         //cout <<token <<endl;
         vector <string >Results=camelcase(token);
         for(const string&res :Results){
+            string low_res=ToLower(res);
             // Have to LowerCase Before pushing 
-            results.push_back(res);
+            results.push_back(low_res);
         }
     }
     //for(const auto &res:results){
