@@ -6,9 +6,13 @@ string ToLower(string str){
     //for (char c :str){ // works but makes copy 
     //    c=tolower(c);
     //}
+    // static_cast<unsigned char> prevents crashes/undefined behavior 
+    // by ensuring negative character values (like 'é') are treated as positive numbers.
+
     for (int i = 0; i < str.length(); i++)
     {
-        str[i] = tolower(str[i]);
+        // Cast to unsigned char prevents crashes if the string has accented/international characters
+        str[i] = tolower(static_cast<unsigned char>(str[i]));
     }
     return str;
 }

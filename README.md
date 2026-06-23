@@ -3,18 +3,6 @@
 A local file-search tool built in C++17 that indexes filenames on your computer recursively and allows you to search for them using keywords with instant query results.
 
 ---
-
-
-##TODO for 20/06/2026
-
-1.Add ToLower Function in utils and convert final results of tokenization to lower before returning
-2.Explore More about advanced camelCase tokenixation try to fix token = "NAME" -> n , a, m ,e ->user_search: Token "name" ->name ------> No files found or false
-
-
-
-
-
------
 ## Overview
 
 This project is a command-line file-search utility. It scans a configured folder on your hard drive, breaks every filename into keywords (tokens), and persists those keywords in a local SQLite database index. When you search for a file, it looks up your query keywords in the database and shows you matching files, sorted by relevance based on how many keywords each file matched.
@@ -31,6 +19,7 @@ The project is in an early/prototype stage. The core pipeline is fully functiona
 
 - ✅ **Recursive Directory Scanning**: Traverses directory structures recursively using C++17 `std::filesystem`.
 - ✅ **Unified Tokenization**: Splits filenames and search queries on common delimiters (`_`, `.`, `-`, spaces, parentheses, brackets) to handle diverse naming conventions.
+- ✅ **CamelCase Tokenization**: Splits camelCase terms (e.g., `MyReport` into `["my", "report"]`) to support searching by constituent words.
 - ✅ **Case-Insensitive Search**: Lowercases all tokens at both index and search time for robust matching.
 - ✅ **In-Memory Cache**: Populates an inverted index in memory (`unordered_map<string, unordered_set<string>>`) from SQLite on start for sub-millisecond query lookups.
 - ✅ **SQLite Persistence**: Saves the index database (`index.db`) locally so you don't need to re-scan every time you start the tool.
@@ -186,7 +175,7 @@ MINI_SEARCH_ENGINE/
 ├── compile_command.txt           # Sample compile command document
 ├── fact.py                       # Combinatorics scratch notes (gitignored)
 ├── index.db                      # Generated SQLite database file (gitignored)
-├── project_documentation.md      # Detailed developer documentation
+├── todo.md                       # Structured checklist and future roadmap
 └── README.md                     # Project overview and guide (this file)
 ```
 
@@ -237,6 +226,7 @@ Using `std::filesystem::directory_iterator` with recursion is straightforward, b
 | **No unit tests** | Lacks automated unit testing frameworks. |
 | **Windows-oriented** | Hardcoded Windows paths (`D:\\`) mean it requires modification to run on Linux/macOS. |
 | **No result pagination** | All results print at once, which can flood the terminal for generic queries. |
+| **CamelCase acronym splitting** | All-caps acronyms (e.g., `NAME`) are split into single-character tokens (`["n", "a", "m", "e"]`) by the camelCase splitting algorithm. |
 
 ---
 
@@ -247,7 +237,7 @@ Using `std::filesystem::directory_iterator` with recursion is straightforward, b
 - [x] Move tokenization into Utils and share it between Indexer and SearchEngine.
 - [x] Complete `LoadIndex()` workflow.
 - [x] Remove duplicated tokenization logic.
-- [ ] Add CamelCase tokenization (e.g., `MyReport` → `["my", "report"]`).
+- [x] Add CamelCase tokenization (e.g., `MyReport` → `["my", "report"]`).
 - [ ] Improve ranking beyond simple token counts (implement TF-IDF or BM25).
 - [ ] Add metadata storage (extension, size, modified date).
 - [ ] Clean project structure and remove dead code.
