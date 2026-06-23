@@ -2,8 +2,16 @@
 
 using namespace std;
 
-
-
+string ToLower(string str){
+    //for (char c :str){ // works but makes copy 
+    //    c=tolower(c);
+    //}
+    for (int i = 0; i < str.length(); i++)
+    {
+        str[i] = tolower(str[i]);
+    }
+    return str;
+}
 //string ToLower(string target)
 vector <string>camelcase(string &token){
     string current;
