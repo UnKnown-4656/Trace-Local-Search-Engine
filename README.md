@@ -1,4 +1,4 @@
-# Mini Search Engine
+# Trace Local Search Engine
 
 A local file-search tool built in C++17 that indexes filenames on your computer recursively and allows you to search for them using keywords with instant query results.
 
