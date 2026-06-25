@@ -2,7 +2,10 @@
 
 A local file-search tool built in C++17 that indexes filenames on your computer recursively and allows you to search for them using keywords with instant query results.
 
----
+--------
+no commits were done in june 25th 2025
+.......
+.......
 ## Overview
 
 This project is a command-line file-search utility. It scans a configured folder on your hard drive, breaks every filename into keywords (tokens), and persists those keywords in a local SQLite database index. When you search for a file, it looks up your query keywords in the database and shows you matching files, sorted by relevance based on how many keywords each file matched.
