@@ -44,7 +44,7 @@ vector<string>Tokenize(const string &str) {
     string current;
     for (char c :str){
         //c = static_cast<char>(tolower(static_cast<unsigned char>(c)));;
-        if(c=='_' || c=='.' || c=='-' || c==' ' || c=='(' || c==')' || c== '[' || c==']'){
+        if(c=='_' || c=='-' || c==' ' || c=='(' || c==')' || c== '[' || c==']'){
             if(!current.empty()){  //Not Empty
                 tokens.push_back(current); //push current  
                 current.clear();

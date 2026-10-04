@@ -8,7 +8,7 @@ namespace fs = std::filesystem;
 
 
 int main() {
-    fs::path MyPath = "D:\\Downloads";
+    fs::path MyPath = "C:\\Downloads";
     
     Indexer indexer;
     if (fs::exists("index.db")) {
