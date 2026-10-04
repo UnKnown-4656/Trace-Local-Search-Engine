@@ -1,0 +1,19 @@
+# ninja log v7
+41	809	8128054773568183	CMakeFiles/search.dir/src/Utils/utils.cpp.obj	825c55335d0eea60
+48	1667	8128053267650461	CMakeFiles/search.dir/src/main.cpp.obj	7319cdd70487681a
+81	1707	8128053267979987	CMakeFiles/search.dir/src/SearchEngine/SearchEngine.cpp.obj	f5416bad8df0c684
+63	1887	8128053267799962	CMakeFiles/search.dir/src/Indexer/sql_indexer.cpp.obj	26331da9f43046cb
+71	8674	8128053267851485	CMakeFiles/search.dir/src/Indexer/sql/sqlite3.c.obj	1655d9aeb6b8c3b6
+819	1052	8128054781355909	search.exe	6c300c360d61bf9c
+144	1200	8128108042159736	CMakeFiles/test_search.dir/src/Utils/utils.cpp.obj	a8e4064fb4d56ba8
+129	1703	8128108042026123	CMakeFiles/test_search.dir/src/SearchEngine/SearchEngine.cpp.obj	efdda51b419ccb28
+76	1872	8128108041448650	CMakeFiles/search.dir/src/Indexer/sql_indexer.cpp.obj	26331da9f43046cb
+97	2019	8128108041671686	CMakeFiles/test_search.dir/src/Indexer/sql_indexer.cpp.obj	78134b2adfcfcaca
+105	7682	8128108041864821	CMakeFiles/test_search.dir/src/Indexer/sql/sqlite3.c.obj	2f02b76946298f22
+36	311	8128109280404039	search.exe	6c300c360d61bf9c
+28	1117	8128109280404039	CMakeFiles/test_search.dir/tests/test_search.cpp.obj	39712d4dda10cc33
+1118	1358	8128109291278855	test_search.exe	6dd2359fe4c85007
+31	1527	8128122418431656	CMakeFiles/test_search.dir/tests/test_search.cpp.obj	39712d4dda10cc33
+1528	1787	8128122433402747	test_search.exe	6dd2359fe4c85007
+26	1406	8128123714781660	CMakeFiles/test_search.dir/tests/test_search.cpp.obj	39712d4dda10cc33
+1407	1623	8128123728614819	test_search.exe	6dd2359fe4c85007
