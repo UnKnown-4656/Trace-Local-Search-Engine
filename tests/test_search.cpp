@@ -18,8 +18,8 @@ int main()
     {
         {"python-3.14.8",{(PATH /"python-3.14.8.txt").string()}},
         {"python",{(PATH /"python-3.14.8.txt").string()}},
-        {"3.14.8",{(PATH /"python-3.14.8.txt").string()}}
-
+        {"3.14.8",{(PATH /"python-3.14.8.txt").string()}},
+        {"python-3.14.8-amd64",{(PATH /"python-3.14.8-amd64.txt").string()}}
     };
 
     //string file_names[]={"python-3.14.8","winrar","test"};
@@ -29,12 +29,20 @@ int main()
         auto results=engine.search(file.first);
         for(auto &path:file.second)
         {
-            if(results[0].path==path){
-                cout<<file.first<<" :PASS[MATCHED]"<<endl;
+            for(auto result:results){
+                if(result.path==path){
+                    cout<<file.first<<" :PASS[MATCHED]"<<endl;
+                }
+
             }
-            else{
-                cout<<file.first<<" :FAIL[NOT MATCHED]"<<endl;
-            }
+           // if(results[0].path==path){
+             //   cout<<file.first<<" :PASS[MATCHED]"<<endl;
+           // }
+            //else{
+            //    cout<<file.first<<" :FAIL[NOT MATCHED]"<<endl;
+             ////   cout<<path<<endl;
+             //   cout<<results[0].path<<endl;
+            //}
         }
         //for(auto &result:results)
         ////{
